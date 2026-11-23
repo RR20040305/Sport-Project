@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Sport Complex System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login-screen" class="screen">
+    <div class="card">
+        <h2>Вход в систему</h2>
+        <input type="email" id="login-email" placeholder="Email" value="admin@example.org">
+        <input type="password" id="login-password" placeholder="Пароль" value="Adm1!750DF9E52689A0B47E4DE85BC5C8AAC0">
+        <button onclick="login()">Войти</button>
+        <p id="login-error" class="error"></p>
+    </div>
+</div>
+
+<div id="main-screen" class="screen hidden">
+    <header>
+        <div class="logo">Sport Complex</div>
+        <div class="user-info">
+            <span id="user-email"></span> (<span id="user-role"></span>)
+            <button onclick="logout()" class="danger" style="padding: 5px 10px; margin-left: 10px;">Выйти</button>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <button class="nav-btn active" onclick="showView('bookings')">Бронирования</button>
+        <button class="nav-btn" onclick="showView('analytics')">Аналитика</button>
+        <button class="nav-btn admin-only" onclick="showView('admin-facilities')">Площадки</button>
+        <button class="nav-btn admin-only" onclick="showView('admin-users')">Пользователи</button>
+        <button class="nav-btn admin-only" onclick="showView('admin-audit')">Аудит</button>
+        <button class="nav-btn" onclick="showView('profile')">Профиль</button>
+    </nav>
+
+    <div id="view-bookings" class="view">
+        <div class="toolbar">
+            <input type="text" id="search-input" placeholder="Поиск по клиенту..." oninput="loadBookings()">
+            <button onclick="showBookingModal()">Добавить</button>
+            <button onclick="exportCsv()" class="secondary">Экспорт CSV</button>
+            <div style="display: inline-block; margin-left: auto;">
+                <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="importCsv(this)">
+                <button onclick="document.getElementById('csv-file').click()" class="secondary">Импорт CSV</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Код</th><th>Клиент</th><th>Площадка</th>
+                    <th>Время</th><th>Статус</th><th>Цена</th><th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="bookings-table"></tbody>
+        </table>
+    </div>
+
+    <div id="view-analytics" class="view hidden">
+        <h2>Сводные показатели</h2>
+        <div id="analytics-cards" class="cards-grid"></div>
+        <h3>Группировки</h3>
+        <div id="analytics-groups"></div>
+    </div>
+
+    <div id="view-admin-facilities" class="view hidden">
+        <h2>Управление площадками</h2>
+        <button onclick="showFacilityModal()" style="width: auto; margin-bottom: 15px;">Добавить площадку</button>
+        <table>
+            <thead>
+                <tr><th>Название</th><th>Описание</th><th>Цена за час</th><th>Статус</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="facilities-table"></tbody>
+        </table>
+    </div>
+
+    <div id="view-admin-users" class="view hidden">
+        <h2>Управление пользователями</h2>
+        <table>
+            <thead>
+                <tr><th>Email</th><th>ФИО</th><th>Роли</th><th>Активен</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="users-table"></tbody>
+        </table>
+    </div>
+
+    <div id="view-admin-audit" class="view hidden">
+        <h2>Журнал аудита</h2>
+        <div class="toolbar">
+            <input type="text" id="audit-search" placeholder="Поиск по типу или описанию..." oninput="loadAudit()">
+        </div>
+        <table>
+            <thead>
+                <tr><th>Время</th><th>Пользователь</th><th>Событие</th><th>Сущность</th><th>Описание</th></tr>
+            </thead>
+            <tbody id="audit-table"></tbody>
+        </table>
+    </div>
+
+    <div id="view-profile" class="view hidden">
+        <h2>Мой профиль</h2>
+        <div class="card" style="margin: 0; max-width: 400px;">
+            <p><b>Email:</b> <span id="profile-email"></span></p>
+            <p><b>ФИО:</b> <span id="profile-name"></span></p>
+            <p><b>Роли:</b> <span id="profile-roles"></span></p>
+            <hr>
+            <h3>Смена пароля</h3>
+            <input type="password" id="old-password" placeholder="Старый пароль">
+            <input type="password" id="new-password" placeholder="Новый пароль (мин. 8 символов)">
+            <button onclick="changePassword()">Сменить пароль</button>
+        </div>
+    </div>
+</div>
+
+<div id="booking-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="modal-title">Новое бронирование</h3>
+        <input type="hidden" id="booking-id">
+        <input type="hidden" id="booking-version">
+        
+        <label>Площадка</label>
+        <select id="facility-select"></select>
+        
+        <label>Имя клиента</label>
+        <input type="text" id="client-name" placeholder="Иван Иванов">
+        
+        <label>Телефон</label>
+        <input type="text" id="client-phone" placeholder="+79990000000">
+        
+        <label>Дата и время начала</label>
+        <input type="datetime-local" id="start-time">
+        
+        <label>Дата и время окончания</label>
+        <input type="datetime-local" id="end-time">
+        
+        <div id="status-group" style="display: none;">
+            <label>Статус</label>
+            <select id="booking-status">
+                <option value="CREATED">Создано</option>
+                <option value="CONFIRMED">Подтверждено</option>
+                <option value="COMPLETED">Завершено</option>
+                <option value="CANCELLED">Отменено</option>
+            </select>
+        </div>
+
+        <label>Приоритет</label>
+        <select id="booking-priority">
+            <option value="LOW">Низкий</option>
+            <option value="MEDIUM">Средний</option>
+            <option value="HIGH">Высокий</option>
+        </select>
+        
+        <div class="modal-actions">
+            <button onclick="saveBooking()">Сохранить</button>
+            <button onclick="hideBookingModal()" class="secondary">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="facility-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="facility-modal-title">Новая площадка</h3>
+        <input type="hidden" id="facility-edit-id">
+        
+        <label>Название</label>
+        <input type="text" id="facility-name" placeholder="Футбольное поле №1">
+        
+        <label>Описание</label>
+        <input type="text" id="facility-desc" placeholder="Крытое поле с искусственным газоном">
+
+        <label>Цена за час (руб.)</label>
+        <input type="number" id="facility-price" placeholder="1500.00" step="0.01">
+        
+        <label>Статус</label>
+        <select id="facility-active">
+            <option value="true">Активна</option>
+            <option value="false">Отключена</option>
+        </select>
+
+        <div class="modal-actions">
+            <button onclick="saveFacility()">Сохранить</button>
+            <button onclick="hideFacilityModal()" class="secondary">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

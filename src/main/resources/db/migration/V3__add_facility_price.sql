@@ -1,0 +1,1 @@
+ALTER TABLE facilities ADD COLUMN price_per_hour NUMERIC(10, 2) NOT NULL DEFAULT 0.00;

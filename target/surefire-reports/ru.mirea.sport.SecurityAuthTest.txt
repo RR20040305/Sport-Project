@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: ru.mirea.sport.SecurityAuthTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.446 s -- in ru.mirea.sport.SecurityAuthTest
